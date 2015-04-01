@@ -92,12 +92,12 @@ def csv_read():  #核心的函数，
 			# billvalue =  billvalue_make(bill_one,bill_two,bill_three,bill_four,bill_five,bill_six)
 			# targetvalue = targetvalue_make(target_one,target_two,target_three,target_four,target_five,target_six)
 			billvalue=billvalue_make1(bill_one,bill_two,bill_three,bill_four)
-            targetvalue=targetvalue_make1(target_one,target_two,target_three,target_four)
-            # 生成数值之后赋值给yangka_data这个数组，列1为是否出账生成这个的状态变化#的数据，列2为目标变化生成的数据. index_number每次加1 作为一个浮标
-            yangka_data[index_number][0] = billvalue
-            yangka_data[index_number][1] = targetvalue
-            index_jnumber = index_number + 1
-        # print yankga_data
+			targetvalue=targetvalue_make1(target_one,target_two,target_three,target_four)
+			# 生成数值之后赋值给yangka_data这个数组，列1为是否出账生成这个的状态变化#的数据，列2为目标变化生成的数据. index_number每次加1 作为一个浮标
+			yangka_data[index_number][0] = billvalue
+			yangka_data[index_number][1] = targetvalue
+			index_jnumber = index_number + 1
+		# print yankga_data
 		# 这是核心部分，需要在运行这个程序之前安装fp_growth这个频繁项挖掘的算法包，其返回的itemset 就是挖掘处来的每个数组集如‘['00000', '30288'] ’，support 为出现次数‘2782’,它们共同组成生成到文件里的记录‘['00000', '30288'] 2782’，下面的数字500 是挖掘出来的记录出现的最低次数，比如像'‘['00000', '30288'] ’这种状态如果出现次数低于500 就不考虑，超过500 就考虑，在这里它出现了'2782'次，所以就会考虑了.
 		for (itemset,support) in find_frequent_itemsets(yangka_data,500,True):
 			print>>fpgrowth_yangka,itemset,support #把这些挖掘得到的记录 生成到文件yangka.txt里.
