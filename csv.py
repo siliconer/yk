@@ -3,35 +3,43 @@ import _csv
 import sys
 import codecs
 import os 
+import operator
 reload(sys)                      
 sys.setdefaultencoding('utf-8')   
-from  fp_growth import find_frequent_itemsets #导入fp_growth这个算法包里的函数发现频繁项
+from  fp_growth import find_frequent_itemsets
+def convert_state_value(bill):
+	negative_chinese = '\xe5\x90\xa6' 
+	postive_chinese = '\xe6\x98\xaf'  
+	convert_state_value = 'U'
+	if bill == negative_chinese:
+		convert_state_value = 'Y'
+	if bill == postive_chinese:
+		convert_state_value = 'N' 
+	return convert_state_value 
 
 def state_change(bill_one,bill_two):
-	negative_chinese = '\xe5\x90\xa6' #中文'否'的另外一种编码描述
-	postive_chinese = '\xe6\x98\xaf'  #中文‘是’的另外一种编码描述
+	negative_chinese = '\xe5\x90\xa6' 
+	postive_chinese = '\xe6\x98\xaf'  
 	state_change_value = -1 
-	if bill_one == negative_chinese and bill_two == negative_chinese: #如果一月是否出账三无 为'否'，二月是否出账三无为’否‘
-		state_change_value = 0			#则数值为0
-	elif bill_one == negative_chinese and bill_two == postive_chinese: #如果一月是否出账三无 为'否'，二月是否出账三无为’是‘
-		state_change_value = 1			#则数值为1
+	if bill_one == negative_chinese and bill_two == negative_chinese: 
+		state_change_value = 0			
+	elif bill_one == negative_chinese and bill_two == postive_chinese: 
+		state_change_value = 1			
 	elif bill_one == postive_chinese and bill_two == negative_chinese:
 		state_change_value = 2
 	elif bill_one == postive_chinese and bill_two == postive_chinese:
 		state_change_value = 3
 	return state_change_value
-def billvalue_make(bill_one,bill_two,bill_three,bill_four,bill_five,bill_six): #根据状态变化函数state_change 来对六个月的状态变化形成一个数据 譬如'00003'
+def billvalue_make(bill_one,bill_two,bill_three,bill_four,bill_five,bill_six): 
 	billvalue = str(state_change(bill_one,bill_two))+str(state_change(bill_two,bill_three))+str(state_change(bill_three,bill_four))+str(state_change(bill_four,bill_five))+str(state_change(bill_five,bill_six))
 	# print  'billvalue'
 	# print billvalue
 	return billvalue   
-def billvalue_make1(bill_one,bill_two,bill_three,bill_four): #只看三个月变化的情况
-   billvalue = str(state_change(bill_one,bill_two))+str(state_change(bill_two,bill_three))+str(state_change(bill_three,bill_four))
-   return billvalue
 
-def target_change(target_one,target_two): #目标状态变化函数,生成数据譬如'01233'
-	if target_one == '0' and target_two == '0':  #如果一月目标0，二月目标0，
-		targetvalue = 0				#则这两个月之间目标变化的数值为0
+
+def target_change(target_one,target_two): 
+	if target_one == '0' and target_two == '0':  
+		targetvalue = 0				
 	elif  target_one == '0' and target_two == '1':
 		targetvalue = 1
 	elif  target_one == '0' and target_two == '2':
@@ -55,35 +63,42 @@ def targetvalue_make(target_one,target_two,target_three,target_four,target_five,
 	# print 'targetvalue'
 	# print targetvalue
 	return targetvalue
+
+def billvalue_make1(bill_one,bill_two,bill_three,bill_four): 
+   billvalue = 'B'+str(convert_state_value(bill_one))+str(convert_state_value(bill_two))+str(convert_state_value(bill_three))+str(convert_state_value(bill_four))
+   return billvalue
 def targetvalue_make1(target_one,target_two,target_three,target_four):
-    targetvalue = str(target_change(target_one,target_two)) + str(target_change(target_two,target_three))+ str(target_change(target_three,target_four))
+    # targetvalue = 'T'+str(target_change(target_one,target_two)) + str(target_change(target_two,target_three))+ str(target_change(target_three,target_four))
+    targetvalue = 'T'+str(target_one)+str(target_two)+str(target_three)+str(target_four)
     return targetvalue
 
-def csv_read():  #核心的函数，
+def csv_read():  
 	current_dir = os.getcwd()
+	counter  = 0
 	csv_file = current_dir + '/my/yk--my.csv'
-	write_file = current_dir + '/yangka.txt'
-	with open(csv_file, 'rb') as csvfile: #读取csv 文件.
+	counter = 0
+	yangka_txt = current_dir + '/yangka.txt'
+	file_yangka = codecs.open(yangka_txt,"w")  
+
+	with open(csv_file, 'rb') as csvfile: 
 		csvreader = _csv.reader(csvfile, delimiter=' ', quotechar='|')
 		negative_chinese = '\xe5\x90\xa6'
 		postive_chinese = '\xe6\x98\xaf'
 		billvalue = ''
-		targetvalue = ''#初始化为空字符.
+		targetvalue = ''
 		index_number = 0 
 		yangka_data = [['0' for i in range(0,2)] for j in range(0,90000)]
-		fpgrowth_yangka = codecs.open(write_file,"w")  #定义要把发现出来的数据写入的文件. 其中w代表写.
 
 		for row in csvreader:
 			element = str(', '.join(row)) 
-			_element = str(', '.join(row).decode("gb2312") )  # 每条_element 的例子为   ”否,否,否,否,否,否,1,0,0,1,2,2“
-			#bill_one,bill_two,bill_three ...分别表示一月，二月，三月...是否出账三无的数值为'否'还是'是'
-			bill_one = _element.split(',')[0] #对_element 以','进行分割 ”否,否,否,否,否,否,1,0,0,1,2,2“分割得到的第一项为'否'
+			_element = str(', '.join(row).decode("gb2312") )  
+			
+			bill_one = _element.split(',')[0] 
 			bill_two =  _element.split(',')[1]
 			bill_three =  _element.split(',')[2]
 			bill_four =  _element.split(',')[3]
 			bill_five =  _element.split(',')[4]
 			bill_six =  _element.split(',')[5]	
-			#target_one,target_two,target_three... 分别表示一月，二月，三月....养卡是'0'还是'1'还是'2'
 			target_one = _element.split(',')[6]
 			target_two = _element.split(',')[7]
 			target_three =_element.split(',')[8]
@@ -92,27 +107,57 @@ def csv_read():  #核心的函数，
 			target_six = _element.split(',')[11]
 
 			print _element
-			#根据上面得到的每个月的状态（是否出账三无），目标生成一个状态变化的数值  和目标变化的数值
 			# billvalue =  billvalue_make(bill_one,bill_two,bill_three,bill_four,bill_five,bill_six)
 			# targetvalue = targetvalue_make(target_one,target_two,target_three,target_four,target_five,target_six)
 			billvalue=billvalue_make1(bill_one,bill_two,bill_three,bill_four)
 			targetvalue=targetvalue_make1(target_one,target_two,target_three,target_four)
-			# 生成数值之后赋值给yangka_data这个数组，列1为是否出账生成这个的状态变化#的数据，列2为目标变化生成的数据. index_number每次加1 作为一个浮标
 			yangka_data[index_number][0] = billvalue
-			yangka_data[index_number][1] = targetvalue
+			yangka_data[index_number][1] =  targetvalue
 			index_number = index_number + 1
-		# print yankga_data
-		# 这是核心部分，需要在运行这个程序之前安装fp_growth这个频繁项挖掘的算法包，其返回的itemset 就是挖掘处来的每个数组集如‘['00000', '30288'] ’，support 为出现次数‘2782’,它们共同组成生成到文件里的记录‘['00000', '30288'] 2782’，下面的数字500 是挖掘出来的记录出现的最低次数，比如像'‘['00000', '30288'] ’这种状态如果出现次数低于500 就不考虑，超过500 就考虑，在这里它出现了'2782'次，所以就会考虑了.
-		for (itemset,support) in find_frequent_itemsets(yangka_data,500,True):
-			print>>fpgrowth_yangka,itemset,support #把这些挖掘得到的记录 生成到文件yangka.txt里.
-		
-	new_write_file = current_dir + '/yangka_new.txt'
-	fpgrowth_yangka_new = codecs.open(new_write_file,"w")
-	fp_data = open(write_file)
-	for data in fp_data:
-		if len(str(data.split(']')[0])) > 8:
-			print>>fpgrowth_yangka_new,data.replace('\n', ' ').replace('\r', '')
-			# break		 	
 
-csv_read() # 去掉前面的'#'注释符就可以执行这个函数,进行频繁项发现.
+		for (itemset,support) in find_frequent_itemsets(yangka_data,100,True):
+			print>>file_yangka,itemset,support 
+
+		#temp_arrya :temporary array  && used for reading the initial data generating from fp_growth ,then adjust the data sequence 
+		# example :[T1001,'BYYYY'] 528 ->['BYYYY', 'T1001'] 528 
+		temp_array = [ '0' for i in range(0,10000)] 
+		temp_array_indexer = 0
+		file_data = open(yangka_txt)
+		for data in file_data:
+			print 'data '+ str(data.replace('\n', ' ').replace('\r', ''))
+			if len(str(data.split(']')[0])) > 8:
+				# adjust_write_sequence : [T1001,'BYYYY'] 528 ->['BYYYY', 'T1001'] 528 
+				# .replace('\n', ' ').replace('\r', '')  ->get rid of the '\n' in the end of  each line of yangka.txt	
+				temp_array[temp_array_indexer] = adjust_write_sequence(data).replace('\n', ' ').replace('\r', '')
+				temp_array_indexer = temp_array_indexer + 1 
+				counter = counter +  1 
+
+		#read data from temp_array , sort them and write into yangka_sort.txt
+		yanka_sort_file = current_dir + '/yangka_sort.txt'
+		yangka_sort  = codecs.open(yanka_sort_file,"w")
+		yangka_data_mining= [['0' for i in range(0,2)] for j in range(0,counter)]
+		index_counter = 0 
+		for m  in range(0,len(temp_array)):
+			data = str(temp_array[m])  # read data from temp_array 
+			if data!= '0':
+				yangka_data_mining[index_counter][0] = data.split(']')[0]+']'  # pattern, such as '[T1001,'BYYYY']' 
+ 				yangka_data_mining[index_counter][1] = int(data.split(']')[1]) # the occuring time of pattern ,such as '528' 
+				index_counter = index_counter + 1 
+		yangka_data_mining.sort(key=operator.itemgetter(1), reverse=True)  # sort them.
+		for yangka_data in yangka_data_mining:
+			yangka_data[1] = str(yangka_data[1])
+		for data in yangka_data_mining:
+			print>>yangka_sort,data  # write into file  yangka_sort.txt
+
+def adjust_write_sequence(data):
+	return_data = data
+	B_start_loc = data.find('B')  # find return location, if not return -1 .
+	T_start_loc = data.find('T')
+	#data example :['BYYYY', 'T0200'] 159
+	if B_start_loc!= -1 and T_start_loc !=-1:
+		if B_start_loc > T_start_loc: # T frist show, B then shows.
+			return_data = data[0:T_start_loc]+ data[B_start_loc:B_start_loc+5] + data[T_start_loc+5:B_start_loc]+ data[T_start_loc:T_start_loc+5]+data[B_start_loc+5:]
+	return return_data
+
+csv_read() 
 
